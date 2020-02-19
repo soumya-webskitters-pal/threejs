@@ -47,6 +47,7 @@ import { WebGLUniforms } from './webgl/WebGLUniforms.js';
 import { WebGLUtils } from './webgl/WebGLUtils.js';
 import { WebGLMultiview } from './webgl/WebGLMultiview.js';
 import { WebXRManager } from './webxr/WebXRManager.js';
+import { EffectComposer } from './postprocessing/EffectComposer.js';
 
 function WebGLRenderer( parameters ) {
 
@@ -362,6 +363,8 @@ function WebGLRenderer( parameters ) {
 
 		this.setSize( _width, _height, false );
 
+		_composer.setPixelRatio( value );
+
 	};
 
 	this.getSize = function ( target ) {
@@ -401,6 +404,8 @@ function WebGLRenderer( parameters ) {
 		}
 
 		this.setViewport( 0, 0, width, height );
+
+		_composer.setSize( width, height );
 
 	};
 
@@ -1163,6 +1168,18 @@ function WebGLRenderer( parameters ) {
 
 		}
 
+		// post processing
+
+		var postProcessingEnabled = ! _runningComposer && _composer.passes.length > 0;
+		var currentRenderTarget;
+
+		if ( postProcessingEnabled ) {
+
+			currentRenderTarget = this.getRenderTarget();
+			this.setRenderTarget( _composer.readBuffer );
+
+		}
+
 		//
 
 		currentRenderState = renderStates.get( scene, camera );
@@ -1285,6 +1302,19 @@ function WebGLRenderer( parameters ) {
 
 		currentRenderList = null;
 		currentRenderState = null;
+
+		if ( postProcessingEnabled ) {
+
+			// TODO: If non-null render target is set by user
+			// the final pass should render to it, not to screen
+
+			_runningComposer = true; // to prevent inifinite loop
+			_composer.render();
+			_runningComposer = false;
+
+			this.setRenderTarget( currentRenderTarget );
+
+		}
 
 	};
 
@@ -2831,6 +2861,25 @@ function WebGLRenderer( parameters ) {
 		state.unbindTexture();
 
 	};
+
+	// PostProcessing
+
+	var _composer = new EffectComposer( _this );
+	var _runningComposer = false; // set true while running EffectComposer
+
+	this.setPostProcessing = function ( effects ) {
+
+		_composer.passes.length = 0;
+
+		for ( var i = 0; i < effects.length; i ++ ) {
+
+			_composer.addPass( effects[ i ] );
+
+		}
+
+	};
+
+	//
 
 	if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 
