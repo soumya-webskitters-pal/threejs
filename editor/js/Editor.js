@@ -73,6 +73,10 @@ function Editor() {
 		materialChanged: new Signal(),
 		materialRemoved: new Signal(),
 
+		textureAdded: new Signal(),
+		textureChanged: new Signal(),
+		textureRemoved: new Signal(),
+
 		scriptAdded: new Signal(),
 		scriptChanged: new Signal(),
 		scriptRemoved: new Signal(),
@@ -288,6 +292,33 @@ Editor.prototype = {
 
 		}
 
+		const maps = [
+			'alphaMap',
+			'bumpMap',
+			'displacementMap',
+			'envMap',
+			'metalnessMap',
+			'map',
+			'normalMap',
+			'roughnessMap',
+			'clearCoatMap',
+			'clearCoatNormalMap',
+			'clearCoatRoughnessMap',
+			'transmissionMap'
+		];
+
+		for ( var i = 0; i <= maps.length; i ++ ) {
+
+			const map = material[ maps[ i ] ];
+
+			if ( map !== undefined && map !== null ) {
+
+				this.addTexture( map );
+
+			}
+
+		}
+
 	},
 
 	removeMaterial: function ( material ) {
@@ -359,7 +390,11 @@ Editor.prototype = {
 
 	addTexture: function ( texture ) {
 
+		if ( texture === null ) return;
+
 		this.textures[ texture.uuid ] = texture;
+
+		this.signals.textureAdded.dispatch();
 
 	},
 

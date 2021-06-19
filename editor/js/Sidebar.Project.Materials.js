@@ -1,4 +1,4 @@
-import { UIBreak, UIPanel, UIRow, UIText, UIListbox, UIButton } from './libs/ui.js';
+import { UIBreak, UIPanel, UIRow, UIListbox, UIButton } from './libs/ui.js';
 
 import { SetMaterialCommand } from './commands/SetMaterialCommand.js';
 
@@ -8,11 +8,7 @@ function SidebarProjectMaterials( editor ) {
 	var strings = editor.strings;
 
 	var container = new UIPanel();
-
-	var headerRow = new UIRow();
-	headerRow.add( new UIText( strings.getKey( 'sidebar/project/materials' ).toUpperCase() ) );
-
-	container.add( headerRow );
+	container.setBorderTop( '0' );
 
 	var listbox = new UIListbox();
 	container.add( listbox );

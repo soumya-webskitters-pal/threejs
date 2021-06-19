@@ -527,6 +527,12 @@ function Viewport( editor ) {
 
 	} );
 
+	signals.textureChanged.add( function () {
+
+		render();
+
+	} );
+
 	signals.animationStopped.add( function () {
 
 		render();
@@ -567,7 +573,11 @@ function Viewport( editor ) {
 
 					var renderTarget = new THREE.WebGLCubeRenderTarget( backgroundEquirectangularTexture.image.width );
 					renderTarget.fromEquirectangularTexture( renderer, backgroundEquirectangularTexture );
-					renderTarget.toJSON = function () { return null }; // TODO Remove hack
+					renderTarget.toJSON = function () {
+
+						return null;
+
+					}; // TODO Remove hack
 
 					scene.background = renderTarget.texture;
 
