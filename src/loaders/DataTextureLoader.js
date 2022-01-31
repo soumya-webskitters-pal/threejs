@@ -27,7 +27,9 @@ class DataTextureLoader extends Loader {
 		loader.setResponseType( 'arraybuffer' );
 		loader.setRequestHeader( this.requestHeader );
 		loader.setPath( this.path );
-		loader.setWithCredentials( scope.withCredentials );
+		loader.setWithCredentials( this.withCredentials );
+		loader.setAbortSignal( this.abortSignal );
+
 		loader.load( url, function ( buffer ) {
 
 			const texData = scope.parse( buffer );

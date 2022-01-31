@@ -54,6 +54,8 @@ class PLYLoader extends Loader {
 		loader.setResponseType( 'arraybuffer' );
 		loader.setRequestHeader( this.requestHeader );
 		loader.setWithCredentials( this.withCredentials );
+		loader.setAbortSignal( this.abortSignal );
+
 		loader.load( url, function ( text ) {
 
 			try {
