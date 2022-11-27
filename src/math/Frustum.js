@@ -74,12 +74,9 @@ class Frustum {
 
 	}
 
-	intersectsSprite( sprite ) {
+	intersectsSprite( sprite, camera ) {
 
-		_sphere.center.set( 0, 0, 0 );
-		_sphere.radius = 0.7071067811865476;
-		_sphere.applyMatrix4( sprite.matrixWorld );
-
+		sprite.getBoundingSphere( camera, _sphere );
 		return this.intersectsSphere( _sphere );
 
 	}
