@@ -7,6 +7,7 @@ import { tslFn } from '../shadernode/ShaderNode.js';
 import { loop } from '../utils/LoopNode.js';
 import { smoothstep } from '../math/MathNode.js';
 import { uniforms } from './UniformsNode.js';
+import { builtin } from './BuiltinNode.js';
 
 class ClippingNode extends Node {
 
@@ -31,6 +32,10 @@ class ClippingNode extends Node {
 		if ( this.scope === ClippingNode.ALPHA_TO_COVERAGE ) {
 
 			return this.setupAlphaToCoverage( clippingContext.planes, numClippingPlanes, numUnionClippingPlanes );
+
+		} else if ( this.scope === ClippingNode.HARDWARE ) {
+
+			return this.setupHardwareClipping( clippingContext.planes, numUnionClippingPlanes, builder );
 
 		} else {
 
@@ -133,13 +138,38 @@ class ClippingNode extends Node {
 
 	}
 
+	setupHardwareClipping( planes, numUnionClippingPlanes, builder ) {
+
+		return tslFn( () => {
+
+			const clippingPlanes = uniforms( planes );
+			let plane;
+
+			const hw_clip_distances = builtin( builder.getClipDistance() );
+
+			for ( let i = 0; i < numUnionClippingPlanes; i ++ ) {
+
+				plane = clippingPlanes.element( i );
+
+				const distance = positionView.dot( plane.xyz ).sub( plane.w ).negate();
+				hw_clip_distances.element( i ).assign( distance );
+
+			}
+
+		} )();
+
+	}
+
 }
 
 ClippingNode.ALPHA_TO_COVERAGE = 'alphaToCoverage';
 ClippingNode.DEFAULT = 'default';
+ClippingNode.HARDWARE = 'hardware';
 
 export default ClippingNode;
 
 export const clipping = () => nodeObject( new ClippingNode() );
 
 export const clippingAlpha = () => nodeObject( new ClippingNode( ClippingNode.ALPHA_TO_COVERAGE ) );
+
+export const hardwareClipping = () => nodeObject( new ClippingNode( ClippingNode.HARDWARE ) );
