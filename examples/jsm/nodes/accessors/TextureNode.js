@@ -151,10 +151,20 @@ class TextureNode extends UniformNode {
 
 		}
 
+		let access = this.access;
+
+		if ( access === null && builder.context.getStorageAccess ) {
+
+			access = builder.context.getStorageAccess( this );
+
+		}
+
+
 		//
 
 		properties.uvNode = uvNode;
 		properties.levelNode = levelNode;
+		properties.access = access;
 		properties.compareNode = this.compareNode;
 		properties.gradNode = this.gradNode;
 		properties.depthNode = this.depthNode;
@@ -167,7 +177,7 @@ class TextureNode extends UniformNode {
 
 	}
 
-	generateSnippet( builder, textureProperty, uvSnippet, levelSnippet, depthSnippet, compareSnippet, gradSnippet ) {
+	generateSnippet( builder, textureProperty, uvSnippet, levelSnippet, depthSnippet, compareSnippet, gradSnippet, access ) {
 
 		const texture = this.value;
 
@@ -187,7 +197,7 @@ class TextureNode extends UniformNode {
 
 		} else if ( this.sampler === false ) {
 
-			snippet = builder.generateTextureLoad( texture, textureProperty, uvSnippet, depthSnippet );
+			snippet = builder.generateTextureLoad( texture, textureProperty, uvSnippet, depthSnippet, undefined, access );
 
 		} else {
 
@@ -229,7 +239,7 @@ class TextureNode extends UniformNode {
 
 			if ( propertyName === undefined ) {
 
-				const { uvNode, levelNode, compareNode, depthNode, gradNode } = properties;
+				const { uvNode, levelNode, compareNode, depthNode, gradNode, access } = properties;
 
 				const uvSnippet = this.generateUV( builder, uvNode );
 				const levelSnippet = levelNode ? levelNode.build( builder, 'float' ) : null;
@@ -241,7 +251,7 @@ class TextureNode extends UniformNode {
 
 				propertyName = builder.getPropertyName( nodeVar );
 
-				const snippet = this.generateSnippet( builder, textureProperty, uvSnippet, levelSnippet, depthSnippet, compareSnippet, gradSnippet );
+				const snippet = this.generateSnippet( builder, textureProperty, uvSnippet, levelSnippet, depthSnippet, compareSnippet, gradSnippet, access );
 
 				builder.addLineFlowCode( `${propertyName} = ${snippet}` );
 
@@ -345,6 +355,14 @@ class TextureNode extends UniformNode {
 		textureNode.referenceNode = this;
 
 		return nodeObject( textureNode );
+
+	}
+
+	setAccess( value ) {
+
+		this.access = value;
+
+		return this;
 
 	}
 

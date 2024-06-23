@@ -32,13 +32,6 @@ class StorageTextureNode extends TextureNode {
 
 	}
 
-	setAccess( value ) {
-
-		this.access = value;
-		return this;
-
-	}
-
 	generate( builder, output ) {
 
 		let snippet;
@@ -66,8 +59,9 @@ class StorageTextureNode extends TextureNode {
 		const textureProperty = super.generate( builder, 'property' );
 		const uvSnippet = uvNode.build( builder, 'uvec2' );
 		const storeSnippet = storeNode.build( builder, 'vec4' );
+		const accessSnippet = builder.getStorageAccess( this );
 
-		const snippet = builder.generateTextureStore( builder, textureProperty, uvSnippet, storeSnippet );
+		const snippet = builder.generateTextureStore( builder, textureProperty, uvSnippet, storeSnippet, accessSnippet );
 
 		builder.addLineFlowCode( snippet );
 
@@ -82,9 +76,9 @@ export const storageTexture = nodeProxy( StorageTextureNode );
 export const storageTextureReadOnly = ( value, uvNode, storeNode ) => storageTexture( value, uvNode, storeNode ).setAccess( 'read-only' );
 export const storageTextureReadWrite = ( value, uvNode, storeNode ) => storageTexture( value, uvNode, storeNode ).setAccess( 'read-write' );
 
-export const textureStore = ( value, uvNode, storeNode ) => {
+export const textureStore = ( value, uvNode, storeNode, access ) => {
 
-	const node = storageTexture( value, uvNode, storeNode );
+	const node = storageTexture( value, uvNode, storeNode ).setAccess( access );
 
 	if ( storeNode !== null ) node.append();
 

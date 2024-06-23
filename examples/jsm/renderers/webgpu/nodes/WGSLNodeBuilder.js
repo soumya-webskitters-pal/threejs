@@ -247,11 +247,15 @@ class WGSLNodeBuilder extends NodeBuilder {
 
 	}
 
-	generateTextureLoad( texture, textureProperty, uvIndexSnippet, depthSnippet, levelSnippet = '0u' ) {
+	generateTextureLoad( texture, textureProperty, uvIndexSnippet, depthSnippet, levelSnippet = '0u', accessSnippet ) {
 
 		if ( depthSnippet ) {
 
 			return `textureLoad( ${ textureProperty }, ${ uvIndexSnippet }, ${ depthSnippet }, ${ levelSnippet } )`;
+
+		} else if ( accessSnippet ) {
+
+			return `textureLoad( ${ textureProperty }, ${ uvIndexSnippet } )`;
 
 		} else {
 
@@ -407,7 +411,7 @@ class WGSLNodeBuilder extends NodeBuilder {
 
 	getStorageAccess( node ) {
 
-		if ( node.isStorageTextureNode ) {
+		if ( node.access !== undefined ) {
 
 			switch ( node.access ) {
 
@@ -434,7 +438,7 @@ class WGSLNodeBuilder extends NodeBuilder {
 		} else {
 
 			// @TODO: Account for future read-only storage buffer pull request
-			return 'read_write';
+			return 'write';
 
 		}
 
@@ -472,7 +476,7 @@ class WGSLNodeBuilder extends NodeBuilder {
 
 				}
 
-				texture.store = node.isStorageTextureNode === true;
+				texture.store = node.access !== undefined || node.isStorageTextureNode === true;
 				texture.setVisibility( gpuShaderStageLib[ shaderStage ] );
 
 				if ( shaderStage === 'fragment' && this.isUnfilterable( node.value ) === false && texture.store === false ) {
@@ -855,7 +859,7 @@ ${ flowData.code }
 
 					textureType = 'texture_3d<f32>';
 
-				} else if ( uniform.node.isStorageTextureNode === true ) {
+				} else if ( uniform.node.access !== undefined || uniform.node.isStorageTextureNode === true ) {
 
 					const format = getFormat( texture );
 					const access = this.getStorageAccess( uniform.node );
