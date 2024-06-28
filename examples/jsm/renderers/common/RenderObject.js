@@ -121,6 +121,12 @@ export default class RenderObject {
 
 	}
 
+	get hardwareClippingPlanes() {
+
+		return this.clippingContext.hardwareClippingPlanes;
+
+	}
+
 	getNodeBuilderState() {
 
 		return this._nodeBuilderState || ( this._nodeBuilderState = this._nodes.getForRender( this ) );

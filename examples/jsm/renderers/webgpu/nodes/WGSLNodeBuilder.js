@@ -629,7 +629,29 @@ ${ flowData.code }
 
 	}
 
+	getClipDistance() {
+
+		return 'hw_clip_distances';
+
+	}
+
 	isFlipY() {
+
+		return false;
+
+	}
+
+	enableHardwareClipping() {
+
+		const { localClippingCount, globalClippingCount } = this.clippingContext;
+		const planeCount = localClippingCount + globalClippingCount;
+
+		if ( planeCount > 0 && planeCount <= 8 && this.renderer.backend.hasFeature( 'clip-distances' ) ) {
+
+			this.getBuiltin( 'clip_distances', 'hw_clip_distances', `array<f32, ${ planeCount } >`, 'vertex' );
+			return true;
+
+		}
 
 		return false;
 

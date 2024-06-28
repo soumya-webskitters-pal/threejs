@@ -22,7 +22,7 @@ import EnvironmentNode from '../lighting/EnvironmentNode.js';
 import IrradianceNode from '../lighting/IrradianceNode.js';
 import { depth } from '../display/ViewportDepthNode.js';
 import { cameraLogDepth } from '../accessors/CameraNode.js';
-import { clipping, clippingAlpha } from '../accessors/ClippingNode.js';
+import { clipping, clippingAlpha, hardwareClipping } from '../accessors/ClippingNode.js';
 import { faceDirection } from '../display/FrontFacingNode.js';
 
 const NodeMaterials = new Map();
@@ -42,6 +42,7 @@ class NodeMaterial extends Material {
 		this.fog = true;
 		this.lights = true;
 		this.normals = true;
+		this.hardwareClipping = false;
 
 		this.lightsNode = null;
 		this.envNode = null;
@@ -146,7 +147,7 @@ class NodeMaterial extends Material {
 
 	setupClipping( builder ) {
 
-		if ( builder.clippingContext === null ) return null;
+		if ( builder.clippingContext === null || this.hardwareClipping === true ) return null;
 
 		const { globalClippingCount, localClippingCount } = builder.clippingContext;
 
@@ -168,6 +169,28 @@ class NodeMaterial extends Material {
 		}
 
 		return result;
+
+	}
+
+	setupHardwareClipping( builder ) {
+
+		if ( builder.clippingContext === null ) return null;
+
+		const { localClipIntersection } = builder.clippingContext;
+
+		if ( ! localClipIntersection && ! this.alphaToCoverage && builder.enableHardwareClipping() ) {
+
+			builder.stack.add( hardwareClipping() );
+
+			this.hardwareClipping = true;
+
+		} else {
+
+			this.hardwareClipping = false;
+
+		}
+
+		return;
 
 	}
 
@@ -243,6 +266,8 @@ class NodeMaterial extends Material {
 			positionLocal.assign( this.positionNode );
 
 		}
+
+		this.setupHardwareClipping( builder );
 
 		const mvp = modelViewProjection();
 

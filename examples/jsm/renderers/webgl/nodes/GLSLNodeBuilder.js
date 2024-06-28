@@ -612,6 +612,12 @@ ${ flowData.code }
 
 	}
 
+	getClipDistance() {
+
+		return 'gl_ClipDistance';
+
+	}
+
 	isAvailable( name ) {
 
 		let result = supports[ name ];
@@ -646,6 +652,29 @@ ${ flowData.code }
 	isFlipY() {
 
 		return true;
+
+	}
+
+	enableHardwareClipping() {
+
+		const renderer = this.renderer;
+		const { localClippingCount, globalClippingCount } = this.clippingContext;
+		const planeCount = localClippingCount + globalClippingCount;
+
+		if ( planeCount === 0 ) return false;
+
+		const gl = renderer.getContext();
+		const ext = gl.getExtension( 'WEBGL_clip_cull_distance' );
+
+		if ( ext && planeCount <= gl.getParameter( ext.MAX_CLIP_DISTANCES_WEBGL ) ) {
+
+			this.clippingContext.hardwareClippingPlanes = planeCount;
+
+			return true;
+
+		}
+
+		return false;
 
 	}
 
@@ -689,6 +718,8 @@ ${vars}
 		return `#version 300 es
 
 ${ this.getSignature() }
+
+${ this.hardwareClippingPlanes !== 0 ? '#extension GL_ANGLE_clip_cull_distance : enable' : '' }
 
 // precision
 ${ defaultPrecisions }

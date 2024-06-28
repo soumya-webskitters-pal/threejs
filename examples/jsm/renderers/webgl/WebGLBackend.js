@@ -569,7 +569,7 @@ class WebGLBackend extends Backend {
 
 	draw( renderObject/*, info*/ ) {
 
-		const { object, pipeline, material, context } = renderObject;
+		const { object, pipeline, material, context, hardwareClippingPlanes } = renderObject;
 		const { programGPU } = this.get( pipeline );
 
 		const { gl, state } = this;
@@ -582,7 +582,7 @@ class WebGLBackend extends Backend {
 
 		const frontFaceCW = ( object.isMesh && object.matrixWorld.determinant() < 0 );
 
-		state.setMaterial( material, frontFaceCW );
+		state.setMaterial( material, frontFaceCW, hardwareClippingPlanes );
 
 		gl.useProgram( programGPU );
 

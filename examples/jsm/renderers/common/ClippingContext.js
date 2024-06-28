@@ -20,6 +20,7 @@ class ClippingContext {
 
 		this.parentVersion = 0;
 		this.viewNormalMatrix = new Matrix3();
+		this.hardwareClippingPlanes = 0;
 
 	}
 
