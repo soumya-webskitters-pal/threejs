@@ -55,18 +55,6 @@ class WebGPUUtils {
 
 	}
 
-	getCurrentColorSpace( renderContext ) {
-
-		if ( renderContext.textures !== null ) {
-
-			return renderContext.textures[ 0 ].colorSpace;
-
-		}
-
-		return this.backend.renderer.outputColorSpace;
-
-	}
-
 	getPrimitiveTopology( object, material ) {
 
 		if ( object.isPoints ) return GPUPrimitiveTopology.PointList;
@@ -94,18 +82,6 @@ class WebGPUUtils {
 		}
 
 		return count;
-
-	}
-
-	getSampleCountRenderContext( renderContext ) {
-
-		if ( renderContext.textures !== null ) {
-
-			return this.getSampleCount( renderContext.sampleCount );
-
-		}
-
-		return this.getSampleCount( this.backend.renderer.samples );
 
 	}
 
