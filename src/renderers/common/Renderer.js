@@ -136,6 +136,8 @@ class Renderer {
 		this.transparent = true;
 		this.opaque = true;
 
+		this.nodeHandler = null;
+
 		this.shadowMap = {
 			enabled: false,
 			type: PCFShadowMap
@@ -232,7 +234,7 @@ class Renderer {
 		if ( targetScene === null ) targetScene = scene;
 
 		const renderTarget = this._renderTarget;
-		const renderContext = this._renderContexts.get( targetScene, camera, renderTarget );
+		const renderContext = this._renderContexts.get( targetScene, camera, this.nodeHandler, renderTarget );
 		const activeMipmapLevel = this._activeMipmapLevel;
 
 		const compilationPromises = [];
@@ -538,7 +540,7 @@ class Renderer {
 
 		//
 
-		const renderContext = this._renderContexts.get( scene, camera, renderTarget );
+		const renderContext = this._renderContexts.get( scene, camera, this.nodeHandler, renderTarget );
 
 		this._currentRenderContext = renderContext;
 		this._currentRenderObjectFunction = this._renderObjectFunction || this.renderObject;

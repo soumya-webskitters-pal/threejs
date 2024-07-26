@@ -149,4 +149,3 @@ export const afterImage = ( node, damp ) => nodeObject( new AfterImageNode( node
 addNodeElement( 'afterImage', afterImage );
 
 export default AfterImageNode;
-

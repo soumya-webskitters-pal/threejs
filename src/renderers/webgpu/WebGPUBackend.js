@@ -199,17 +199,6 @@ class WebGPUBackend extends Backend {
 
 			renderTargetData.descriptors = descriptors;
 
-		}
-
-		if ( renderTargetData.width !== renderTarget.width ||
-			renderTargetData.height !== renderTarget.height ||
-			renderTargetData.activeMipmapLevel !== renderTarget.activeMipmapLevel ||
-			renderTargetData.samples !== renderTarget.samples ||
-			descriptors.length !== renderTarget.textures.length
-		) {
-
-			descriptors.length = 0;
-
 			// dispose
 
 			const onDispose = () => {
@@ -221,6 +210,17 @@ class WebGPUBackend extends Backend {
 			};
 
 			renderTarget.addEventListener( 'dispose', onDispose );
+
+		}
+
+		if ( renderTargetData.width !== renderTarget.width ||
+			renderTargetData.height !== renderTarget.height ||
+			renderTargetData.activeMipmapLevel !== renderTarget.activeMipmapLevel ||
+			renderTargetData.samples !== renderTarget.samples ||
+			descriptors.length !== renderTarget.textures.length
+		) {
+
+			descriptors.length = 0;
 
 		}
 
