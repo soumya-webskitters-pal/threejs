@@ -1004,7 +1004,7 @@ class WebGPUBackend extends Backend {
 			data.sampleCount !== sampleCount || data.colorSpace !== colorSpace ||
 			data.colorFormat !== colorFormat || data.depthStencilFormat !== depthStencilFormat ||
 			data.primitiveTopology !== primitiveTopology ||
-			data.clippingContextCacheKey !== renderObject.clippingContext.cacheKey
+			data.clippingContextCacheKey !== renderObject.clippingContextCacheKey
 		) {
 
 			data.material = material; data.materialVersion = material.version;
@@ -1022,7 +1022,7 @@ class WebGPUBackend extends Backend {
 			data.colorFormat = colorFormat;
 			data.depthStencilFormat = depthStencilFormat;
 			data.primitiveTopology = primitiveTopology;
-			data.clippingContextCacheKey = renderObject.clippingContext.cacheKey;
+			data.clippingContextCacheKey = renderObject.clippingContextCacheKey;
 
 			needsUpdate = true;
 
@@ -1052,7 +1052,7 @@ class WebGPUBackend extends Backend {
 			utils.getSampleCountRenderContext( renderContext ),
 			utils.getCurrentColorSpace( renderContext ), utils.getCurrentColorFormat( renderContext ), utils.getCurrentDepthStencilFormat( renderContext ),
 			utils.getPrimitiveTopology( object, material ),
-			renderObject.clippingContext.cacheKey
+			renderObject.clippingContextCacheKey
 		].join();
 
 	}

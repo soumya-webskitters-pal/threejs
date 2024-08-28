@@ -1,4 +1,3 @@
-import ClippingContext from './ClippingContext.js';
 
 let _id = 0;
 
@@ -38,7 +37,7 @@ function getKeys( obj ) {
 
 export default class RenderObject {
 
-	constructor( nodes, geometries, renderer, object, material, scene, camera, lightsNode, renderContext ) {
+	constructor( nodes, geometries, renderer, object, material, scene, camera, lightsNode, renderContext, clippingContext ) {
 
 		this._nodes = nodes;
 		this._geometries = geometries;
@@ -62,9 +61,8 @@ export default class RenderObject {
 		this.pipeline = null;
 		this.vertexBuffers = null;
 
-		this.updateClipping( renderContext.clippingContext );
-
-		this.clippingContextVersion = this.clippingContext.version;
+		this.clippingContext = clippingContext;
+		this.clippingContextCacheKey = clippingContext !== null ? clippingContext.cacheKey : '';
 
 		this.initialNodesCacheKey = this.getDynamicCacheKey();
 		this.initialCacheKey = this.getCacheKey();
@@ -88,34 +86,15 @@ export default class RenderObject {
 
 	updateClipping( parent ) {
 
-		const material = this.material;
-
-		let clippingContext = this.clippingContext;
-
-		if ( Array.isArray( material.clippingPlanes ) ) {
-
-			if ( clippingContext === parent || ! clippingContext ) {
-
-				clippingContext = new ClippingContext();
-				this.clippingContext = clippingContext;
-
-			}
-
-			clippingContext.update( parent, material );
-
-		} else if ( this.clippingContext !== parent ) {
-
-			this.clippingContext = parent;
-
-		}
+		this.clippingContext = parent;
 
 	}
 
 	get clippingNeedsUpdate() {
 
-		if ( this.clippingContext.version === this.clippingContextVersion ) return false;
+		if ( this.clippingContext === null || this.clippingContext.cacheKey === this.clippingContextCacheKey ) return false;
 
-		this.clippingContextVersion = this.clippingContext.version;
+		this.clippingContextCacheKey = this.clippingContext.cacheKey;
 
 		return true;
 
@@ -235,7 +214,7 @@ export default class RenderObject {
 
 		}
 
-		cacheKey += this.clippingContext.cacheKey + ',';
+		cacheKey += this.clippingContextCacheKey + ',';
 
 		if ( object.skeleton ) {
 
