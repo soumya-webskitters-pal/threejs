@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgpu - postprocessing</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+	</head>
+	<body>
+
+		<div id="info">
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - webgpu postprocessing example<br/>
+			<a href="https://casual-effects.com/data/" target="_blank" rel="noopener">Lee Perry-Smith</a> head
+		</div>
+
+		<div id="container"></div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.webgpu.js",
+					"three/tsl": "../build/three.webgpu.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+			import { bloom, film, pass, sepia, color, bleach, uv, dot, vec3, mix, saturation, gaussianBlur, luminance, vec2, uniform, dotScreen } from 'three/tsl';
+
+			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+			import Stats from 'three/addons/libs/stats.module.js';
+
+			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+			let container, stats;
+
+			let postScene, post1, post2, post3, post4;
+
+			let cameraOrtho, cameraPerspective, sceneModel, sceneBG, renderer, mesh, directionalLight;
+
+			const width = window.innerWidth || 2;
+			const height = window.innerHeight || 2;
+
+			let halfWidth = width / 2;
+			let halfHeight = height / 2;
+
+			let quadBG, quadMask;
+
+			const effectController = {
+				// Multiple screens
+				vignetteOffset: uniform( 0.95 ),
+				vignetteDarkness: uniform( 1.6 ),
+				filmIntensity: uniform( 0.35 ),
+				// Screen 2
+				dotScreenAngle: 0.5,
+				dotScreenScale: 0.25,
+				modelColor: uniform( color( 0xffcccc ) ),
+				backgroundColor: uniform( color( 0xffbf7f ) ),
+				luminance: uniform( 1.0 ),
+				// Screen 4
+				bloomIntensity: uniform( 0.5 )
+			
+			};
+
+			init();
+
+			function init() {
+
+				container = document.getElementById( 'container' );
+
+				cameraOrtho = new THREE.OrthographicCamera( - halfWidth, halfWidth, halfHeight, - halfHeight, - 10000, 10000 );
+				cameraOrtho.position.z = 100;
+
+				cameraPerspective = new THREE.PerspectiveCamera( 50, width / height, 1, 10000 );
+				cameraPerspective.position.z = 900;
+
+				sceneModel = new THREE.Scene();
+				sceneBG = new THREE.Scene();
+
+				directionalLight = new THREE.DirectionalLight( 0xffffff, 3 );
+				directionalLight.position.set( 0, - 0.1, 1 ).normalize();
+				sceneModel.add( directionalLight );
+
+				const loader = new GLTFLoader();
+				loader.load( 'models/gltf/LeePerrySmith/LeePerrySmith.glb', function ( gltf ) {
+
+					createMesh( gltf.scene.children[ 0 ].geometry, sceneModel, 100 );
+
+				} );
+
+				const diffuseMap = new THREE.TextureLoader().load( 'textures/cube/SwedishRoyalCastle/pz.jpg' );
+				diffuseMap.colorSpace = THREE.SRGBColorSpace;
+
+				const materialColor = new THREE.MeshBasicMaterial( {
+					map: diffuseMap,
+					depthTest: false
+				} );
+
+				quadBG = new THREE.Mesh( new THREE.PlaneGeometry( 1, 1 ), materialColor );
+				quadBG.position.z = - 500;
+				quadBG.scale.set( width, height, 1 );
+				sceneBG.add( quadBG );
+
+				const sceneMask = new THREE.Scene();
+
+				quadMask = new THREE.Mesh( new THREE.PlaneGeometry( 1, 1 ), new THREE.MeshBasicMaterial( { color: 0xffaa00 } ) );
+				quadMask.position.z = - 300;
+				quadMask.scale.set( width / 2, height / 2, 1 );
+				sceneMask.add( quadMask );
+
+				renderer = new THREE.WebGPURenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( width, height );
+				renderer.setAnimationLoop( animate );
+
+				container.appendChild( renderer.domElement );
+
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				// Scene where background and model are combined
+				postScene = new THREE.PostProcessing( renderer );
+				// Four quadrants rendering our mixed scene, each with unique postprocessing.
+				post1 = new THREE.PostProcessing( renderer );
+				post2 = new THREE.PostProcessing( renderer );
+				post3 = new THREE.PostProcessing( renderer );
+				post4 = new THREE.PostProcessing( renderer );
+
+				// Scene Pass
+				const backgroundPass = pass( sceneBG, cameraOrtho );
+				const modelPass = pass( sceneModel, cameraPerspective );
+				const combinePass = gaussianBlur( modelPass.a.mix( backgroundPass, modelPass ), vec2( 2 / ( width / 2 ), 2 / ( height / 2 ) ) ).getTextureNode();
+				postScene.outputNode = combinePass;
+
+				// Calculations for all passes
+				const vignetteOffset = uv().sub( 0.5 ).mul( effectController.vignetteOffset );
+				const applyVignette = ( color ) => mix( color, vec3( effectController.vignetteDarkness.oneMinus() ), dot( vignetteOffset, vignetteOffset ) );
+
+				// Pass 1
+				post1.outputNode = applyVignette( film( saturation( postScene.outputNode, 0.0 ), effectController.filmIntensity ) );
+
+				// Pass 2
+				const dotScreenPass = dotScreen( postScene.outputNode, new THREE.Vector2( 0.5, 0.5 ), effectController.dotScreenAngle, effectController.dotScreenScale );
+				const maskModelPass = modelPass.a.mix( dotScreenPass, 0.0 );
+				const maskBackgroundPass = modelPass.a.mix( 0.0, dotScreenPass );
+				const post2BG = luminance( maskModelPass, effectController.luminance ).mul( effectController.backgroundColor );
+				const post2Model = luminance( maskBackgroundPass, effectController.luminance ).mul( effectController.modelColor );
+				const post2Combine = modelPass.a.mix( post2BG, post2Model );
+				post2.outputNode = post2Combine;
+
+				// Pass 3
+				post3.outputNode = applyVignette( film( sepia( postScene.outputNode ), effectController.filmIntensity ) );
+				// Pass 4
+				post4.outputNode = applyVignette( bleach( film( bloom( postScene.outputNode ), effectController.filmIntensity ) ) );
+
+
+				const gui = new GUI();
+				gui.add( effectController.vignetteDarkness, 'value', 1.0, 2.0, 0.1 ).name( 'vignetteDarkness' );
+				gui.add( effectController.vignetteOffset, 'value', 0.0, 1.0, 0.1 ).name( 'vignetteOffset' );
+				gui.add( effectController.filmIntensity, 'value', 0.0, 2.0, 0.01 ).name( 'filmIntensity' );
+				const compose2Folder = gui.addFolder( 'Window 2' );
+				compose2Folder.add( effectController, 'dotScreenAngle', 0.0, 2.0, 0.01 ).onChange( () => {
+
+					dotScreenPass.angle.value = effectController.dotScreenAngle;
+
+			
+				} );
+				compose2Folder.add( effectController, 'dotScreenScale', 0.0, 2.0, 0.01 ).onChange( () => {
+
+					dotScreenPass.scale.value = effectController.dotScreenScale;
+
+			
+				} );
+				compose2Folder.add( effectController.luminance, 'value', 0.0, 2.0, 0.01 ).name( 'luminance' );
+
+				window.addEventListener( 'resize', onWindowResize );
+
+			}
+
+			function onWindowResize() {
+
+				halfWidth = window.innerWidth / 2;
+				halfHeight = window.innerHeight / 2;
+
+				cameraPerspective.aspect = window.innerWidth / window.innerHeight;
+				cameraPerspective.updateProjectionMatrix();
+
+				cameraOrtho.left = - halfWidth;
+				cameraOrtho.right = halfWidth;
+				cameraOrtho.top = halfHeight;
+				cameraOrtho.bottom = - halfHeight;
+
+				cameraOrtho.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				quadBG.scale.set( window.innerWidth, window.innerHeight, 1 );
+				quadMask.scale.set( window.innerWidth / 2, window.innerHeight / 2, 1 );
+
+			}
+
+			function createMesh( geometry, scene, scale ) {
+
+				const diffuseMap = new THREE.TextureLoader().load( 'models/gltf/LeePerrySmith/Map-COL.jpg' );
+				diffuseMap.colorSpace = THREE.SRGBColorSpace;
+
+				const mat2 = new THREE.MeshPhongMaterial( {
+
+					color: 0xcbcbcb,
+					specular: 0x080808,
+					shininess: 20,
+					map: diffuseMap,
+					normalMap: new THREE.TextureLoader().load( 'models/gltf/LeePerrySmith/Infinite-Level_02_Tangent_SmoothUV.jpg' ),
+					normalScale: new THREE.Vector2( 0.75, 0.75 )
+
+				} );
+
+				mesh = new THREE.Mesh( geometry, mat2 );
+				mesh.position.set( 0, - 50, 0 );
+				mesh.scale.set( scale, scale, scale );
+
+				scene.add( mesh );
+
+			}
+
+			//
+
+			function animate() {
+
+				stats.begin();
+				render();
+				stats.end();
+
+			}
+
+			function render() {
+
+				const time = Date.now() * 0.0004;
+
+				if ( mesh ) mesh.rotation.y = - time;
+
+				renderer.setViewport( 0, 0, halfWidth, halfHeight );
+				postScene.render();
+
+				renderer.autoClear = false;
+
+				renderer.setViewport( 0, halfHeight, halfWidth, halfHeight );
+				post1.render();
+
+				renderer.setViewport( halfWidth, halfHeight, halfWidth, halfHeight );
+				post2.render();
+
+				renderer.setViewport( 0, 0, halfWidth, halfHeight );
+				post3.render();
+
+				renderer.setViewport( halfWidth, 0, halfWidth, halfHeight );
+				post4.render();
+
+				renderer.autoClear = true;
+
+			}
+
+		</script>
+	</body>
+</html>
