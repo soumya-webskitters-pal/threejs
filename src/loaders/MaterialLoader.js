@@ -351,24 +351,24 @@ class MaterialLoader extends Loader {
 	static createMaterialFromType( type ) {
 
 		const materialLib = {
-			ShadowMaterial,
-			SpriteMaterial,
-			RawShaderMaterial,
-			ShaderMaterial,
-			PointsMaterial,
-			MeshPhysicalMaterial,
-			MeshStandardMaterial,
-			MeshPhongMaterial,
-			MeshToonMaterial,
-			MeshNormalMaterial,
-			MeshLambertMaterial,
-			MeshDepthMaterial,
-			MeshDistanceMaterial,
-			MeshBasicMaterial,
-			MeshMatcapMaterial,
-			LineDashedMaterial,
-			LineBasicMaterial,
-			Material
+			'ShadowMaterial': ShadowMaterial,
+			'SpriteMaterial': SpriteMaterial,
+			'RawShaderMaterial': RawShaderMaterial,
+			'ShaderMaterial': ShaderMaterial,
+			'PointsMaterial': PointsMaterial,
+			'MeshPhysicalMaterial': MeshPhysicalMaterial,
+			'MeshStandardMaterial': MeshStandardMaterial,
+			'MeshPhongMaterial': MeshPhongMaterial,
+			'MeshToonMaterial': MeshToonMaterial,
+			'MeshNormalMaterial': MeshNormalMaterial,
+			'MeshLambertMaterial': MeshLambertMaterial,
+			'MeshDepthMaterial': MeshDepthMaterial,
+			'MeshDistanceMaterial': MeshDistanceMaterial,
+			'MeshBasicMaterial': MeshBasicMaterial,
+			'MeshMatcapMaterial': MeshMatcapMaterial,
+			'LineDashedMaterial': LineDashedMaterial,
+			'LineBasicMaterial': LineBasicMaterial,
+			'Material': Material
 		};
 
 		return new materialLib[ type ]();
