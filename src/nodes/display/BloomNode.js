@@ -64,6 +64,7 @@ class BloomNode extends TempNode {
 
 			renderTargetHorizontal.texture.name = 'UnrealBloomPass.h' + i;
 			renderTargetHorizontal.texture.generateMipmaps = false;
+			renderTargetHorizontal.isolate = true;
 
 			this._renderTargetsHorizontal.push( renderTargetHorizontal );
 
@@ -71,6 +72,7 @@ class BloomNode extends TempNode {
 
 			renderTargetVertical.texture.name = 'UnrealBloomPass.v' + i;
 			renderTargetVertical.texture.generateMipmaps = false;
+			renderTargetVertical.isolate = true;
 
 			this._renderTargetsVertical.push( renderTargetVertical );
 
